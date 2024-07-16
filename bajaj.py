@@ -24,7 +24,12 @@ def export_to_xlsx(folder_path, output_excel_path):
     df.to_excel(output_excel_path, index=False)
 
 
-
+def is_float(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
 def extract_text_from_pdf(pdf_path):
     with open(pdf_path, 'rb') as file:
         pdf_reader = PyPDF2.PdfReader(file)
@@ -33,7 +38,24 @@ def extract_text_from_pdf(pdf_path):
             page = pdf_reader.pages[page_num]
             text += page.extract_text()
     return text
+def convert_to_excel(pdf_dir, output_excel):
+    # List to store all extracted info
+    all_info = []
 
+    # Loop through all PDF files in the directory
+    for filename in os.listdir(pdf_dir):
+        if filename.endswith('.pdf'):
+            pdf_path = os.path.join(pdf_dir, filename)
+            info = extract_info(pdf_path)
+            all_info.append(info)
+
+    # Convert the list of dictionaries to a DataFrame
+    df = pd.DataFrame(all_info)
+
+    # Export the DataFrame to an Excel file
+    df.to_excel(output_excel, index=False)
+
+    print(f"Data has been exported to {output_excel}")
 # Function to extract information using regex
 def extract_info(text):
     extracted_info = {}
@@ -76,38 +98,43 @@ def extract_info(text):
     extracted_info['Total IDV'] = extract_field(r'(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)\s+C\. Coverage opted',text)
     extracted_info['Total OD Premium (A)'] = extract_field(r'Own Damage Premium[\s]+(\b\d{1,3}(?:,\d{2})*\.\d{2}\b)|Total premium[\s]+(\b\d{1,3}(?:,\d{3})*\.\d{2}\b)',text)
     extracted_info['Third Party Liability (B)'] = extract_field( r'Third Party Liability[\s]+(\b\d{1,3}(?:,\d{3})*\.\d{2}\b)',text)
-    extracted_info['Net Premium(A+B)'] = float(extracted_info['Total OD Premium (A)'])+ float(extracted_info['Third Party Liability (B)'])
+    extracted_info['Net Premium(A+B)'] = extract_field(r'Net Premium[\s]*()(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)',text)
     sgst = extract_field(r'State GST \(9%\)[\s]*(\b\d{1,3}(?:,\d{2})*\.\d{2}\b)',text)
-    if sgst.isdigit():
+    if is_float(sgst):
         sgst = float(sgst)
     else:
         sgst = 0
     cgst = extract_field(r'Central GST \(9%\)[\s]*(\b\d{1,3}(?:,\d{2})*\.\d{2}\b)',text)
-    if cgst.isdigit():
+    if is_float(cgst):
         cgst = float(cgst)
     else:
         cgst = 0
 
 
-    igst = extract_field(r'Integrated GST \(18%\)[\s]*(\b\d{1,3}(?:,\d{2})*\.\d{2}\b)',text)
-    if igst.isdigit():
+    igst = extract_field(r'Integrated GST \(18%\)\s*(\d{1,3}(?:,\d{3})*\.\d{2})',text)
+    if is_float(igst):
         igst = float(igst)
     else:
         igst = 0
     extracted_info['GST'] = sgst+cgst+igst
-    extracted_info['Final Premium'] = extracted_info['Net Premium(A+B)'] + extracted_info['GST']
+    extracted_info['Final Premium'] = extract_field(r'Final Premium Rs.[\s]+(\d{1,3}(?:,\d{3})*\.\d{2})',text)
     return extracted_info
 
-pdf_path = 'Bajaj Insurances/OG-25-1901-1806-00024041.pdf'
+pdf_path = 'Bajaj Insurances/OG-25-1901-1806-00024047.pdf'
 extract_vehicle_details = extract_vehicle_details.extract_veh_details(pdf_path)
 pdf_text = extract_text_from_pdf(pdf_path)
 # print(pdf_text)
-info = extract_info(pdf_text)
-for key, value in info.items():
-    print(f'{key}: {value}')
-# Test with a folder path containing PDFs
-folder_path = 'Bajaj Insurances'  # Update with your folder path
-output_excel_path = 'Extraction_Bajaj_Excel/Extraction_Test.xlsx'  # Update with your desired output Excel file path
+# info = extract_info(pdf_text)
+#
+# for key, value in info.items():
+#     print(f'{key}: {value}')
+#
 
-export_to_xlsx(folder_path, output_excel_path)
+
+# Directory containing the PDFs
+pdf_dir = 'Extraction_Bajaj_Excel'
+output_excel = 'extracted_bajaj_info.xlsx'
+
+# Call the function to convert PDF information to Excel
+convert_to_excel(pdf_dir, output_excel)
 

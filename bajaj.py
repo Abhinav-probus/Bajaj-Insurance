@@ -6,22 +6,7 @@ import os
 import re
 import pandas as pd
 import pdfplumber
-'''
-I am unable to extract the values for vehicle details . Therefore I have plan to use pdfplumber . Which extracts the 
-the table values from the pdf and stores them in list of lists . But I have some issue regarding the code. The issues I will sort out later
-and will focus on another company pdf.
-'''
-def export_to_xlsx(folder_path, output_excel_path):
-    all_details = []
-    for filename in os.listdir(folder_path):
-        if filename.endswith('.pdf'):
-            pdf_path = os.path.join(folder_path, filename)
-            pdf_text = extract_text_from_pdf(pdf_path)
-            details = extract_info(pdf_text)
-            all_details.append(details)
 
-    df = pd.DataFrame(all_details)
-    df.to_excel(output_excel_path, index=False)
 
 
 def is_float(s):
@@ -45,9 +30,12 @@ def convert_to_excel(pdf_dir, output_excel):
     # Loop through all PDF files in the directory
     for filename in os.listdir(pdf_dir):
         if filename.endswith('.pdf'):
+            pdf_text = extract_text_from_pdf(f'Bajaj Insurances/{filename}')
             pdf_path = os.path.join(pdf_dir, filename)
-            info = extract_info(pdf_path)
-            all_info.append(info)
+            vehicle_info = extract_info(pdf_text,pdf_path)
+            for k ,v in vehicle_info.items():
+                print(k+ ' - - '+ v)
+            all_info.append(vehicle_info)
 
     # Convert the list of dictionaries to a DataFrame
     df = pd.DataFrame(all_info)
@@ -57,9 +45,9 @@ def convert_to_excel(pdf_dir, output_excel):
 
     print(f"Data has been exported to {output_excel}")
 # Function to extract information using regex
-def extract_info(text):
+def extract_info(text,pdf_path):
     extracted_info = {}
-
+    extract_vehicle_details.extract_veh_details(pdf_path)
     def extract_field(pattern, text):
         match = re.search(pattern, text)
         if match:
@@ -94,7 +82,7 @@ def extract_info(text):
     extracted_info['CC'] = vehicle_details['CubicCapacity/Kilowatt']
     extracted_info['Previous Insurer Name'] = extract_field(r'\(i\) Insurance Provider[:\s]+([\w\s]+)|Previous Insurer[-\s]*([\w\s]+)\s*Previous Policy No', text)
     extracted_info['Previous Policy No'] = extract_field( r'Previous Policy No[-:\s]*\s*([\w]+)[,\s]',text)
-    extracted_info['Expiring Policy Expiry Date'] = extract_field(r'Previous Policy Expiry Date\s*:\s*(\d{2}-[A-Z]{3,4}-\d{2})',text)
+    extracted_info['Previous Policy Expiry Date'] = extract_field(r'Previous Policy Expiry Date\s*:\s*(\d{2}-[A-Z]{3,4}-\d{2})',text)
     extracted_info['Total IDV'] = extract_field(r'(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)\s+C\. Coverage opted',text)
     extracted_info['Total OD Premium (A)'] = extract_field(r'Own Damage Premium[\s]+(\b\d{1,3}(?:,\d{2})*\.\d{2}\b)|Total premium[\s]+(\b\d{1,3}(?:,\d{3})*\.\d{2}\b)',text)
     extracted_info['Third Party Liability (B)'] = extract_field( r'Third Party Liability[\s]+(\b\d{1,3}(?:,\d{3})*\.\d{2}\b)',text)
@@ -116,25 +104,36 @@ def extract_info(text):
         igst = float(igst)
     else:
         igst = 0
-    extracted_info['GST'] = sgst+cgst+igst
+    extracted_info['GST'] = str(sgst+cgst+igst)
     extracted_info['Final Premium'] = extract_field(r'Final Premium Rs.[\s]+(\d{1,3}(?:,\d{3})*\.\d{2})',text)
     return extracted_info
+def export_to_xlsx(folder_path, output_excel_path):
+    all_details = []
+    for filename in os.listdir(folder_path):
+        if filename.endswith('.pdf'):
+            pdf_path = os.path.join(folder_path, filename)
+            pdf_text = extract_text_from_pdf(pdf_path)
+            extract_vehicle_details.extract_veh_details(pdf_path)
+            details = extract_info(pdf_text)
+            all_details.append(details)
 
-pdf_path = 'Bajaj Insurances/OG-25-1901-1806-00024047.pdf'
-extract_vehicle_details = extract_vehicle_details.extract_veh_details(pdf_path)
-pdf_text = extract_text_from_pdf(pdf_path)
+    df = pd.DataFrame(all_details)
+    df.to_excel(output_excel_path, index=False)
+
+# pdf_path = 'Bajaj Insurances/OG-25-1901-1806-00024047.pdf'
+
+# pdf_text = extract_text_from_pdf(pdf_path)
 # print(pdf_text)
 # info = extract_info(pdf_text)
-#
+
 # for key, value in info.items():
 #     print(f'{key}: {value}')
 #
 
 
 # Directory containing the PDFs
-pdf_dir = 'Extraction_Bajaj_Excel'
-output_excel = 'extracted_bajaj_info.xlsx'
+pdf_dir = 'Bajaj Insurances'
+output_excel = 'Extraction_Bajaj_Excel/extracted_bajaj_info.xlsx'
 
 # Call the function to convert PDF information to Excel
 convert_to_excel(pdf_dir, output_excel)
-

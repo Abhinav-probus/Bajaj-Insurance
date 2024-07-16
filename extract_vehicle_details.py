@@ -46,5 +46,3 @@ def extract_veh_details(pdf_path):
 # print(vehicle_details)
 # # for row in tables:
 # #     print(row)
-
-

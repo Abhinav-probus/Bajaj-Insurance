@@ -8,12 +8,15 @@ def strip_whitespaces(all_tables):
             new_cell_val = []
             for text in cell_val:
                 new_text =''
-                new_text = text.replace('\n','')
-                new_text = new_text.replace('-','')
-                new_cell_val.append(new_text)
+                try:
+                    new_text = text.replace('\n','')
+                    new_text = new_text.replace('-','')
+                    new_cell_val.append(new_text)
+                except AttributeError:
+                    print('none type attribute - '+str(text))
             new_row_val.append(new_cell_val)
             new_table.append(new_row_val)
-    new_table = new_table[:3]
+    new_table = new_table[:3]+[new_table[-1]]
     return new_table
 
 
@@ -33,16 +36,16 @@ def extract_veh_details(pdf_path):
             tables = page.extract_tables()
             for table in tables:
                 all_tables.append(table)
-    cleaned_tables = strip_whitespaces(all_tables[:3])
+    cleaned_tables = strip_whitespaces(all_tables[:4])
     for cleaned_table in cleaned_tables:
         convert_to_dict(cleaned_table)
 
     # Example usage
 
 
-# pdf_path = "Bajaj Insurances/OG-25-1901-1806-00024045.pdf"
-# tables = extract_veh_details(pdf_path)
+pdf_path = "Bajaj 2 wheeler Insurances/OG-23-1901-1802-00035163.pdf"
+extract_veh_details(pdf_path)
 # print(type(tables))
-# print(vehicle_details)
-# # for row in tables:
-# #     print(row)
+print(vehicle_details)
+for k ,v in vehicle_details.items():
+    print(k,v)

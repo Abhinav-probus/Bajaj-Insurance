@@ -117,6 +117,7 @@ def extract_info(text,pdf_path):
         print(f'Period of Insurance (To) date incorrect format - {extracted_info['Period of Insurance (To)']} in {pdf_path} - value : {extracted_info['Period of Insurance (To)']}')
     extracted_info['Registration Number'] = extract_field(r'([A-Z]{2}\d{2}[A-Z]{1,3}\d{4})', text)
     extracted_info['RTO'] = extracted_info['Registration Number'][:4]
+    extracted_info['NCB (%)'] = vehicle_details['NCB%']
 
     # Assuming vehicle_details is a dictionary available in the scope with the required fields
     extracted_info['Make'] = vehicle_details['VehicleMake']

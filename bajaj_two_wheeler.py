@@ -42,7 +42,7 @@ def convert_to_excel(pdf_dir, output_excel):
     # Loop through all PDF files in the directory
     for filename in os.listdir(pdf_dir):
         if filename.endswith('.pdf'):
-            pdf_text = extract_text_from_pdf(f'Bajaj 2 wheeler Insurances/{filename}')
+            pdf_text = extract_text_from_pdf(f'{pdf_dir}/{filename}')
             pdf_path = os.path.join(pdf_dir, filename)
             vehicle_info = extract_info(pdf_text,pdf_path)
             # for k ,v in vehicle_info.items():
@@ -146,8 +146,8 @@ def extract_info(text,pdf_path):
             extracted_info['Previous Policy Expiry Date'] = convert_date_format(extracted_info['Previous Policy Expiry Date'])
         except:
             print(f'Previous Policy Expiry date incorrect format - {extracted_info['Previous Policy Expiry Date']} in {pdf_path} - value : {extracted_info['Previous Policy Expiry Date']}')
-    extracted_info['Total IDV'] = extract_field(r'(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)\s+C\. Coverage opted',text,0)
-
+    # extracted_info['Total IDV'] = extract_field(r'(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)\s+C\. Coverage opted',text,0)
+    extracted_info['Total IDV'] = vehicle_details['TotalIDV(inRs.)']
     extracted_info['Total OD Premium (A)'] = extract_field(r'Total OD Premium - A[\s]+(\b\d{1,3}(?:,\d{2})*\.\d{2}\b)|Total Own Damage Premium:[\s]*(\b\d{1,3}(?:,\d{3})*\.\d{2}\b)',text,'0')
     extracted_info['Third Party Liability (B)'] = extract_field( r'Total Liability Premium[:\s]*(\b\d{1,3}(?:,\d{3})*\.\d{2}\b)|Total Act Premium - B[\s]*(\b\d{1,3}(?:,\d{3})*\.\d{2}\b)',text,'0')
     # extracted_info['Net Premium(A+B)'] = extract_field(r'Net Premium[\s]*()(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)',text,0)

@@ -2,6 +2,7 @@ import PyPDF2
 import extract_vehicle_details
 from extract_vehicle_details import vehicle_details
 import openpyxl
+from datetime import datetime
 import os
 import re
 import pandas as pd
@@ -33,8 +34,8 @@ def convert_to_excel(pdf_dir, output_excel):
             pdf_text = extract_text_from_pdf(f'Bajaj Insurances/{filename}')
             pdf_path = os.path.join(pdf_dir, filename)
             vehicle_info = extract_info(pdf_text,pdf_path)
-            for k ,v in vehicle_info.items():
-                print(k+ ' - - '+ v)
+            # for k ,v in vehicle_info.items():
+            #     print(k+ ' - - '+ v)
             all_info.append(vehicle_info)
 
     # Convert the list of dictionaries to a DataFrame
@@ -44,11 +45,43 @@ def convert_to_excel(pdf_dir, output_excel):
     df.to_excel(output_excel, index=False)
 
     print(f"Data has been exported to {output_excel}")
+
+
+def convert_date_format(date_str):
+    # Define the input and output date formats
+    input_format = '%d-%b-%Y'
+    output_format = '%Y/%m/%d'
+
+    # Parse the input date string to a datetime object
+    date_obj = datetime.strptime(date_str, input_format)
+
+    # Format the datetime object to the desired output format
+    formatted_date = date_obj.strftime(output_format)
+
+    return formatted_date
+
+
+def convert_registration_date(date_str):
+    # Define the input format
+    input_format = '%b%Y'
+
+    # Define the output format
+    output_format = '%Y/%m/%d'
+
+    # Parse the input date string to a datetime object
+    date_obj = datetime.strptime(date_str, input_format)
+
+    # Format the datetime object to the desired output format
+    formatted_date = date_obj.strftime(output_format)
+
+    return formatted_date
+
+
 # Function to extract information using regex
 def extract_info(text,pdf_path):
     extracted_info = {}
     extract_vehicle_details.extract_veh_details(pdf_path)
-    def extract_field(pattern, text):
+    def extract_field(pattern, text,default = ' '):
         match = re.search(pattern, text)
         if match:
             if match.group(1):
@@ -56,22 +89,26 @@ def extract_info(text,pdf_path):
             elif match.group(2):
                 return match.group(2)
         else:
-            return ' '
+            return default
 
     extracted_info['Policy Number'] = extract_field(r"policy number\s+'([A-Z0-9-]+)'", text)
     extracted_info["Insured Name"] = extract_field(r'Dear ([A-Za-z\s]+)[,\n]', text)
     extracted_info["Customer's Phone Number"] = extract_field(r'Proposer Mobile Number[:\s]+(\d+)', text)
     extracted_info["Customer's Email"] = extract_field(r'Proposer e-mail id[:\s]+(\w+@\w+\.\w+)', text)
     extracted_info["Insured Address"] = extract_field(r'Proposer Address\s*:\s*([^:]+?)\s*\d\.\s', text)
-    extracted_info['Date of Issuance'] = extract_field(r'Policy Issued on[:\s](\d{2}-[A-Za-z]{3,4}-\d{4})\b', text)
-    extracted_info['Period of Insurance (From)'] = extract_field(r'From[\s:]+(\d{2}-[A-Za-z]{3,4}-\d{4})', text)
-    extracted_info['Period of Insurance (To)'] = extract_field(r'To[\s:][\s:]+(\d{2}-[A-Za-z]{3,4}-\d{4})', text)
+    extracted_info['Date of Issuance'] = extract_field( r'Policy issued on\s+(\d{2}-[A-Za-z]{3}-\d{4})', text)
+    extracted_info['Date of Issuance'] = convert_date_format(extracted_info['Date of Issuance'])
+    extracted_info['Period of Insurance (From)'] = extract_field(r'From[\s:]+(\d{2}-[A-Za-z]{3,4}-\d{4})', text,' ')
+    extracted_info['Period of Insurance (From)'] = convert_date_format(extracted_info['Period of Insurance (From)'])
+    extracted_info['Period of Insurance (To)'] = extract_field(r'To[\s:][\s:]+(\d{2}-[A-Za-z]{3,4}-\d{4})', text,' ')
+    extracted_info['Period of Insurance (To)'] = convert_date_format(extracted_info['Period of Insurance (To)'])
     extracted_info['Registration Number'] = extract_field(r'([A-Z]{2}\d{2}[A-Z]{1,3}\d{4})', text)
     extracted_info['RTO'] = extracted_info['Registration Number'][:4]
 
     # Assuming vehicle_details is a dictionary available in the scope with the required fields
     extracted_info['Make'] = vehicle_details['VehicleMake']
     extracted_info['Date of Registration'] = vehicle_details['Month/YearofRegn']
+    extracted_info['Date of Registration'] = convert_registration_date(extracted_info['Date of Registration'])
     extracted_info['Model'] = vehicle_details['VehicleModel']
     extracted_info['Variant'] = vehicle_details['VehicleSubType']
     extracted_info['Year of Manufacture'] = vehicle_details['YearofManufacture']
@@ -81,12 +118,17 @@ def extract_info(text,pdf_path):
     extracted_info['Seating Capacity'] = vehicle_details['SeatingCapacity']
     extracted_info['CC'] = vehicle_details['CubicCapacity/Kilowatt']
     extracted_info['Previous Insurer Name'] = extract_field(r'\(i\) Insurance Provider[:\s]+([\w\s]+)|Previous Insurer[-\s]*([\w\s]+)\s*Previous Policy No', text)
+    extracted_info['Previous Insurer Name'] = ' ' if extracted_info['Previous Insurer Name'] == 'NA\n' else extracted_info['Previous Insurer Name']
     extracted_info['Previous Policy No'] = extract_field( r'Previous Policy No[-:\s]*\s*([\w]+)[,\s]',text)
+    extracted_info['Previous Policy No'] = ' ' if extracted_info['Previous Policy No'] == 'NA' else extracted_info['Previous Policy No']
     extracted_info['Previous Policy Expiry Date'] = extract_field(r'Previous Policy Expiry Date\s*:\s*(\d{2}-[A-Z]{3,4}-\d{2})',text)
-    extracted_info['Total IDV'] = extract_field(r'(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)\s+C\. Coverage opted',text)
-    extracted_info['Total OD Premium (A)'] = extract_field(r'Own Damage Premium[\s]+(\b\d{1,3}(?:,\d{2})*\.\d{2}\b)|Total premium[\s]+(\b\d{1,3}(?:,\d{3})*\.\d{2}\b)',text)
-    extracted_info['Third Party Liability (B)'] = extract_field( r'Third Party Liability[\s]+(\b\d{1,3}(?:,\d{3})*\.\d{2}\b)',text)
-    extracted_info['Net Premium(A+B)'] = extract_field(r'Net Premium[\s]*()(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)',text)
+    if extracted_info['Previous Policy Expiry Date'] != ' ':
+        extracted_info['Previous Policy Expiry Date'] = convert_date_format(extracted_info['Previous Policy Expiry Date'])
+    extracted_info['Total IDV'] = extract_field(r'(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)\s+C\. Coverage opted',text,0)
+
+    extracted_info['Total OD Premium (A)'] = extract_field(r'Own Damage Premium[\s]+(\b\d{1,3}(?:,\d{2})*\.\d{2}\b)|Total premium[\s]+(\b\d{1,3}(?:,\d{3})*\.\d{2}\b)',text,0)
+    extracted_info['Third Party Liability (B)'] = extract_field( r'Third Party Liability[\s]+(\b\d{1,3}(?:,\d{3})*\.\d{2}\b)',text,0)
+    extracted_info['Net Premium(A+B)'] = extract_field(r'Net Premium[\s]*()(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)',text,0)
     sgst = extract_field(r'State GST \(9%\)[\s]*(\b\d{1,3}(?:,\d{2})*\.\d{2}\b)',text)
     if is_float(sgst):
         sgst = float(sgst)
@@ -104,7 +146,7 @@ def extract_info(text,pdf_path):
         igst = float(igst)
     else:
         igst = 0
-    extracted_info['GST'] = str(sgst+cgst+igst)
+    extracted_info['GST'] = (sgst+cgst+igst)
     extracted_info['Final Premium'] = extract_field(r'Final Premium Rs.[\s]+(\d{1,3}(?:,\d{3})*\.\d{2})',text)
     return extracted_info
 def export_to_xlsx(folder_path, output_excel_path):

@@ -28,7 +28,7 @@ def extract_text_from_pdf(pdf_path):
             page = pdf_reader.pages[page_num]
             text += page.extract_text()
     return text
-def convert_to_excel(pdf_dir, output_excel):
+def bajaj_two_wheeler_submodule(pdf_dir, output_excel):
     # List to store all extracted info
     all_info = []
 
@@ -41,14 +41,14 @@ def convert_to_excel(pdf_dir, output_excel):
             # for k ,v in vehicle_info.items():
             #     print(k+ ' - - '+ v)
             all_info.append(vehicle_info)
-
+    return all_info
     # Convert the list of dictionaries to a DataFrame
-    df = pd.DataFrame(all_info)
-
-    # Export the DataFrame to an Excel file
-    df.to_excel(output_excel, index=False)
-
-    print(f"Data has been exported to {output_excel}")
+    # df = pd.DataFrame(all_info)
+    #
+    # # Export the DataFrame to an Excel file
+    # df.to_excel(output_excel, index=False)
+    #
+    # print(f"Data has been exported to {output_excel}")
 
 
 def convert_date_format(date_str):
@@ -187,9 +187,9 @@ def export_to_xlsx(folder_path, output_excel_path):
 
 
 # Directory containing the PDFs
-pdf_dir = 'Bajaj 2 wheeler Insurances'
-
-output_excel = 'Extraction_Bajaj_Excel/extracted_bajaj_2wheeler_info.xlsx'
-
-# Call the function to convert PDF information to Excel
-convert_to_excel(pdf_dir, output_excel)
+# pdf_dir = 'Insurance_pdf/Bajaj 2 wheeler Insurances'
+#
+# output_excel = 'Extraction_Bajaj_Excel/extracted_bajaj_2wheeler_info.xlsx'
+#
+# # Call the function to convert PDF information to Excel
+# convert_to_excel(pdf_dir, output_excel)

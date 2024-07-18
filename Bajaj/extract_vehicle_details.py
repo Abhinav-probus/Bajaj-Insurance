@@ -42,7 +42,7 @@ def extract_veh_details(pdf_path):
     # Example usage
 
 #
-pdf_path = "Bajaj gcv and pcv insurances/OG-19-1901-1803-00005678.pdf"
+pdf_path = "Insurance_pdf/Bajaj gcv and pcv insurances/OG-19-1901-1803-00005678.pdf"
 extract_veh_details(pdf_path)
 # print(type(tables))
 print(vehicle_details)

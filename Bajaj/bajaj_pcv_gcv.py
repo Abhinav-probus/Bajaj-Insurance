@@ -28,7 +28,7 @@ def extract_text_from_pdf(pdf_path):
             page = pdf_reader.pages[page_num]
             text += page.extract_text()
     return text
-def convert_to_excel(pdf_dir, output_excel):
+def bajaj_pcv_and_gcv_submodule(pdf_dir):
     # List to store all extracted info
     all_info = []
 
@@ -41,14 +41,14 @@ def convert_to_excel(pdf_dir, output_excel):
             # for k ,v in vehicle_info.items():
             #     print(k+ ' - - '+ v)
             all_info.append(vehicle_info)
-
+    # print(f"Data ")
+    return all_info
     # Convert the list of dictionaries to a DataFrame
-    df = pd.DataFrame(all_info)
+    # df = pd.DataFrame(all_info)
+    #
+    # # Export the DataFrame to an Excel file
+    # df.to_excel(output_excel, index=False)
 
-    # Export the DataFrame to an Excel file
-    df.to_excel(output_excel, index=False)
-
-    print(f"Data has been exported to {output_excel}")
 
 
 def convert_date_format(date_str):
@@ -220,9 +220,9 @@ def export_to_xlsx(folder_path, output_excel_path):
 #
 
 
-# Directory containing the PDFs
-pdf_dir = 'Bajaj gcv and pcv insurances'
-output_excel = 'Extraction_Bajaj_Excel/extracted_bajaj_gcv&pcv_info.xlsx'
-
-# Call the function to convert PDF information to Excel
-convert_to_excel(pdf_dir, output_excel)
+# # Directory containing the PDFs
+# pdf_dir = 'Insurance_pdf/Bajaj gcv and pcv insurances'
+# output_excel = 'Extraction_Bajaj_Excel/extracted_bajaj_gcv&pcv_info.xlsx'
+#
+# # Call the function to convert PDF information to Excel
+# convert_to_excel(pdf_dir, output_excel)

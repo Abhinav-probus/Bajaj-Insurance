@@ -19,12 +19,7 @@ def convert_to_float(value_str):
     except ValueError:
         # Handle cases where conversion fails (e.g., non-numeric characters)
         return 0.0  # Return 0 if conversion fails or other errors occur
-def is_float(s):
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
+
 def extract_text_from_pdf(pdf_path):
     with open(pdf_path, 'rb') as file:
         pdf_reader = PyPDF2.PdfReader(file)
@@ -96,7 +91,7 @@ def extract_info(text,pdf_path):
     extracted_info['Policy Number'] = extract_field(r"policy number\s+'([A-Z0-9-]+)'", text)
     extracted_info["Insured Name"] = extract_field(r'Dear ([A-Za-z\s]+)[,\n]', text)
     extracted_info["Customer's Phone Number"] = extract_field(r'Proposer Mobile Number[:\s]+(\d+)', text)
-    extracted_info["Customer's Email"] = extract_field(r'Proposer e-mail id[:\s]+(\w+@\w+\.\w+)', text)
+    extracted_info["Customer's Email"] = extract_field(r'Proposer e-mail id[:\s]+([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})', text)
     extracted_info["Insured Address"] = extract_field(r'Proposer Address\s*:\s*([^:]+?)\s*\d\.\s', text)
     extracted_info['Date of Issuance'] = extract_field(r'Policy [iI]ssued on\s+(\d{2}-[A-Za-z]{3}-\d{4})', text)
     try:
@@ -118,12 +113,12 @@ def extract_info(text,pdf_path):
     extracted_info['NCB (%)'] = vehicle_details['NCB%']
 
     # Assuming vehicle_details is a dictionary available in the scope with the required fields
-    extracted_info['Make'] = vehicle_details['VehicleMake']
     extracted_info['Date of Registration'] = vehicle_details['Month/YearofRegn']
     try:
         extracted_info['Date of Registration'] = convert_date_format(extracted_info['Date of Registration'])
     except:
         print(f'Date of registration incorrect format - {extracted_info['Date of Registration']} in {pdf_path} - value : {extracted_info['Date of Registration']}')
+    extracted_info['Make'] = vehicle_details['VehicleMake']
     extracted_info['Model'] = vehicle_details['VehicleModel']
     extracted_info['Variant'] = vehicle_details['VehicleSubType']
     extracted_info['Year of Manufacture'] = vehicle_details['YearofManufacture']
@@ -132,13 +127,13 @@ def extract_info(text,pdf_path):
     extracted_info['Chassis Number'] = vehicle_details['ChassisNumber']
     extracted_info['Seating Capacity'] = vehicle_details['SeatingCapacity']
     extracted_info['CC'] = vehicle_details['CubicCapacity/Kilowatt']
-    extracted_info['Previous Insurer Name'] = extract_field(r'\(i\) Insurance Provider[:\s]+([\w\s]+)|Previous Insurer[-\s]*([\w\s]+)\s*Previous Policy No', text)
+    extracted_info['Previous Insurer Name'] = extract_field(r'\(i\) Insurance Provider[:\s]+([\w\s]+)|Previous Insurer\s*-\s*([^\n.]+)[.Previous]', text)
 
     extracted_info['Previous Insurer Name'] = ' ' if extracted_info['Previous Insurer Name'] == 'NA\n' or extracted_info['Previous Insurer Name'] == 'NA' else extracted_info['Previous Insurer Name']
 
-    extracted_info['Previous Policy No'] = extract_field( r'Previous Policy No[-:\s]*\s*([\w]+)[,\s]',text)
+    extracted_info['Previous Policy No'] = extract_field( r'Previous Policy No\s*[-:]\s*([A-Za-z0-9/]+)',text)
     extracted_info['Previous Policy No'] = ' ' if extracted_info['Previous Policy No'] == 'NA' else extracted_info['Previous Policy No']
-    extracted_info['Previous Policy Expiry Date'] = extract_field(r'Previous Policy Expiry Date\s*:\s*(\d{2}-[A-Z]{3}-\d{2})',text)
+    extracted_info['Previous Policy Expiry Date'] = extract_field(r'Expiry On\s*-\s*(\d{2}-[A-Z]{3}-\d{2})|Previous Policy Expiry Date\s*:\s*(\d{2}-[A-Z]{3}-\d{2})',text)
     if extracted_info['Previous Policy Expiry Date'] != ' ':
         try:
             extracted_info['Previous Policy Expiry Date'] = convert_date_format(extracted_info['Previous Policy Expiry Date'])
@@ -151,22 +146,18 @@ def extract_info(text,pdf_path):
     # extracted_info['Net Premium(A+B)'] = extract_field(r'Net Premium[\s]*()(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)',text,0)
     extracted_info['Net Premium(A+B)'] = convert_to_float(extracted_info['Total OD Premium (A)']) + convert_to_float(extracted_info['Third Party Liability (B)'])
     sgst = extract_field(r'State GST \(9%\)[\s]*(\b\d{1,3}(?:,\d{2})*\.\d{2}\b)',text)
-    if is_float(sgst):
-        sgst = convert_to_float(sgst)
-    else:
-        sgst = 0
+
+    sgst = convert_to_float(sgst)
+
     cgst = extract_field(r'Central GST \(9%\)[\s]*(\b\d{1,3}(?:,\d{2})*\.\d{2}\b)',text)
-    if is_float(cgst):
-        cgst = convert_to_float(cgst)
-    else:
-        cgst = 0
+
+    cgst = convert_to_float(cgst)
 
 
     igst = extract_field(r'Integrated GST \(18%\)\s*(\d{1,3}(?:,\d{3})*\.\d{2})',text)
-    if is_float(igst):
-        igst = convert_to_float(igst)
-    else:
-        igst = 0
+
+    igst = convert_to_float(igst)
+
     extracted_info['GST'] = (sgst+cgst+igst)
     # extracted_info['Final Premium'] = extract_field(r'Final Premium Rs.[\s]+(\d{1,3}(?:,\d{3})*\.\d{2})',text)
     extracted_info['Final Premium'] = extracted_info['Net Premium(A+B)'] + extracted_info['GST']
@@ -197,6 +188,7 @@ def export_to_xlsx(folder_path, output_excel_path):
 
 # Directory containing the PDFs
 pdf_dir = 'Bajaj 2 wheeler Insurances'
+
 output_excel = 'Extraction_Bajaj_Excel/extracted_bajaj_2wheeler_info.xlsx'
 
 # Call the function to convert PDF information to Excel

@@ -19,12 +19,7 @@ def convert_to_float(value_str):
     except ValueError:
         # Handle cases where conversion fails (e.g., non-numeric characters)
         return 0.0  # Return 0 if conversion fails or other errors occur
-def is_float(s):
-    try:
-        float(s)
-        return True
-    except ValueError:
-        return False
+
 def extract_text_from_pdf(pdf_path):
     with open(pdf_path, 'rb') as file:
         pdf_reader = PyPDF2.PdfReader(file)
@@ -96,7 +91,7 @@ def extract_info(text,pdf_path):
     extracted_info['Policy Number'] = extract_field(r"policy number\s+'([A-Z0-9-]+)'", text)
     extracted_info["Insured Name"] = extract_field(r'Dear ([A-Za-z\s]+)[,\n]', text)
     extracted_info["Customer's Phone Number"] = extract_field(r'Proposer Mobile Number[:\s]+(\d+)', text)
-    extracted_info["Customer's Email"] = extract_field(r'Proposer e-mail id[:\s]+(\w+@\w+\.\w+)', text)
+    extracted_info["Customer's Email"] = extract_field(r'Proposer e-mail id[:\s]+([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})', text)
     extracted_info["Insured Address"] = extract_field(r'Proposer Address\s*:\s*([^:]+?)\s*\d\.\s', text)
     extracted_info['Date of Issuance'] = extract_field(r'Policy [iI]ssued on\s+(\d{2}-[A-Za-z]{3}-\d{4})', text)
     try:
@@ -118,13 +113,13 @@ def extract_info(text,pdf_path):
     extracted_info['NCB (%)'] = extract_field(r'No Claim Bonus\s*:\s*-(\d+)%',text,'0')
 
     # Assuming vehicle_details is a dictionary available in the scope with the required fields
-    extracted_info['Make'] = vehicle_details['VehicleMake']
 
     extracted_info['Date of Registration'] = ' '
     # try:
     #     extracted_info['Date of Registration'] = convert_date_format(extracted_info['Date of Registration'])
     # except:
     #     print(f'Date of registration incorrect format - {extracted_info['Date of Registration']} in {pdf_path} - value : {extracted_info['Date of Registration']}')
+    extracted_info['Make'] = vehicle_details['VehicleMake']
     extracted_info['Model'] = vehicle_details['VehicleModel']
     extracted_info['Variant'] = vehicle_details['VehicleSubType']
     manufacture_year = ''
@@ -186,22 +181,17 @@ def extract_info(text,pdf_path):
     # extracted_info['Net Premium(A+B)'] = extract_field(r'Net Premium[\s]*()(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)',text,0)
     extracted_info['Net Premium(A+B)'] = convert_to_float(extracted_info['Total OD Premium (A)']) + convert_to_float(extracted_info['Third Party Liability (B)'])
     sgst = extract_field(r'State GST \(9%\)[\s]*(\d+)|State GST[\s]*(\d+)',text)
-    if is_float(sgst):
-        sgst = convert_to_float(sgst)
-    else:
-        sgst = 0
+
+    sgst = convert_to_float(sgst)
+
     cgst = extract_field(r'Central GST \(9%\)[\s]*(\d+)|Central GST[\s]*(\d+)',text)
-    if is_float(cgst):
-        cgst = convert_to_float(cgst)
-    else:
-        cgst = 0
+    cgst = convert_to_float(cgst)
 
 
     igst = extract_field(r'Integrated GST \(\d+%\)\s*(\d+)',text)
-    if is_float(igst):
-        igst = convert_to_float(igst)
-    else:
-        igst = 0
+
+    igst = convert_to_float(igst)
+
     extracted_info['GST'] = (sgst+cgst+igst)
     # extracted_info['Final Premium'] = extract_field(r'Final Premium Rs.[\s]+(\d{1,3}(?:,\d{3})*\.\d{2})',text)
     extracted_info['Final Premium'] = extracted_info['Net Premium(A+B)'] + extracted_info['GST']

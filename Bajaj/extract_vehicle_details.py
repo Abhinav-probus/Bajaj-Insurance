@@ -16,7 +16,7 @@ def strip_whitespaces(all_tables):
                     print('none type attribute - '+str(text))
             new_row_val.append(new_cell_val)
             new_table.append(new_row_val)
-    new_table = new_table[:3]+[new_table[-1]]
+
     return new_table
 
 
@@ -30,7 +30,6 @@ def convert_to_dict(cleaned_table):
 
 def extract_veh_details(pdf_path):
     with pdfplumber.open(pdf_path) as pdf:
-        veh_details = {}
         all_tables = []
         for page in pdf.pages:
             tables = page.extract_tables()
@@ -42,8 +41,8 @@ def extract_veh_details(pdf_path):
 
     # Example usage
 
-
-pdf_path = "Bajaj 2 wheeler Insurances/OG-23-1901-1802-00035163.pdf"
+#
+pdf_path = "Bajaj gcv and pcv insurances/OG-19-1901-1803-00005678.pdf"
 extract_veh_details(pdf_path)
 # print(type(tables))
 print(vehicle_details)

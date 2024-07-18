@@ -1,12 +1,10 @@
 import PyPDF2
 import extract_vehicle_details
 from extract_vehicle_details import vehicle_details
-import openpyxl
 from datetime import datetime
 import os
 import re
 import pandas as pd
-import pdfplumber
 
 
 def convert_to_float(value_str):
@@ -198,8 +196,8 @@ def export_to_xlsx(folder_path, output_excel_path):
 
 
 # Directory containing the PDFs
-pdf_dir = 'Bajaj 2 wheeler Insurances'
-output_excel = 'Extraction_Bajaj_Excel/extracted_bajaj_2wheeler_info.xlsx'
+pdf_dir = 'Bajaj private car insurances'
+output_excel = 'Extraction_Bajaj_Excel/extracted_bajaj_privatecar_info.xlsx'
 
 # Call the function to convert PDF information to Excel
 convert_to_excel(pdf_dir, output_excel)

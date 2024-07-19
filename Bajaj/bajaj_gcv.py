@@ -28,26 +28,18 @@ def extract_text_from_pdf(pdf_path):
             page = pdf_reader.pages[page_num]
             text += page.extract_text()
     return text
-def bajaj_pcv_and_gcv_submodule(pdf_dir):
+def bajaj_gcv_submodule(pdf_path):
     # List to store all extracted info
+    print('inside gcv')
     all_info = []
 
-    # Loop through all PDF files in the directory
-    for filename in os.listdir(pdf_dir):
-        if filename.endswith('.pdf'):
-            pdf_text = extract_text_from_pdf(f'{pdf_dir}/{filename}')
-            pdf_path = os.path.join(pdf_dir, filename)
-            vehicle_info = extract_info(pdf_text,pdf_path)
-            # for k ,v in vehicle_info.items():
-            #     print(k+ ' - - '+ v)
-            all_info.append(vehicle_info)
+
+    pdf_text = extract_text_from_pdf(pdf_path)
+    vehicle_info = extract_info(pdf_text, pdf_path)
+    all_info.append(vehicle_info)
     # print(f"Data ")
     return all_info
-    # Convert the list of dictionaries to a DataFrame
-    # df = pd.DataFrame(all_info)
-    #
-    # # Export the DataFrame to an Excel file
-    # df.to_excel(output_excel, index=False)
+
 
 
 
@@ -87,7 +79,7 @@ def extract_info(text,pdf_path):
                 return match.group(2)
         else:
             return default
-
+    extracted_info['Sub module'] = 'Gcv'
     extracted_info['Policy Number'] = extract_field(r"policy number\s+'([A-Z0-9-]+)'", text)
     extracted_info["Insured Name"] = extract_field(r'Dear ([A-Za-z\s]+)[,\n]', text)
     extracted_info["Customer's Phone Number"] = extract_field(r'Proposer Mobile Number[:\s]+(\d+)', text)
@@ -196,18 +188,6 @@ def extract_info(text,pdf_path):
     # extracted_info['Final Premium'] = extract_field(r'Final Premium Rs.[\s]+(\d{1,3}(?:,\d{3})*\.\d{2})',text)
     extracted_info['Final Premium'] = extracted_info['Net Premium(A+B)'] + extracted_info['GST']
     return extracted_info
-def export_to_xlsx(folder_path, output_excel_path):
-    all_details = []
-    for filename in os.listdir(folder_path):
-        if filename.endswith('.pdf'):
-            pdf_path = os.path.join(folder_path, filename)
-            pdf_text = extract_text_from_pdf(pdf_path)
-            extract_vehicle_details.extract_veh_details(pdf_path)
-            details = extract_info(pdf_text)
-            all_details.append(details)
-
-    df = pd.DataFrame(all_details)
-    df.to_excel(output_excel_path, index=False)
 
 # pdf_path = 'Bajaj Insurances/OG-25-1901-1806-00024047.pdf'
 
@@ -222,7 +202,7 @@ def export_to_xlsx(folder_path, output_excel_path):
 
 # # Directory containing the PDFs
 # pdf_dir = 'Insurance_pdf/Bajaj gcv and pcv insurances'
-# output_excel = 'Extraction_Bajaj_Excel/extracted_bajaj_gcv&pcv_info.xlsx'
+# output_excel = 'Extracted_Bajaj_Excel/extracted_bajaj_gcv&pcv_info.xlsx'
 #
 # # Call the function to convert PDF information to Excel
 # convert_to_excel(pdf_dir, output_excel)

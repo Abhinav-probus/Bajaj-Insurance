@@ -45,6 +45,6 @@ def extract_veh_details(pdf_path):
 pdf_path = "Insurance_pdf/Bajaj gcv and pcv insurances/OG-19-1901-1803-00005678.pdf"
 extract_veh_details(pdf_path)
 # print(type(tables))
-print(vehicle_details)
-for k ,v in vehicle_details.items():
-    print(k,v)
+# print(vehicle_details)
+# for k ,v in vehicle_details.items():
+#     print(k,v)

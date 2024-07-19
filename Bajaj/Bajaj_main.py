@@ -3,23 +3,27 @@ import re
 import pandas as pd
 from PyPDF2 import PdfReader
 
+from Bajaj.Bajaj_pcv import bajaj_pcv_submodule
+from Bajaj.bajaj_gcv import bajaj_gcv_submodule
 from Bajaj.bajaj_private_car import bajaj_private_car_submodule
 from Bajaj.bajaj_two_wheeler import bajaj_two_wheeler_submodule
-from Bajaj.bajaj_pcv_gcv import bajaj_pcv_and_gcv_submodule
 
 
+# 'Insurance_pdf\\Bajaj gcv and pcv insurances\\OG-19-1901-1803-00005678.pdf'
+# Bajaj/Insurance_pdf/Bajaj gcv and pcv insurances/OG-19-1901-1803-00005678.pdf
 def main():
     base_dir = "Insurance_pdf"
-    output_excel = "output.xlsx"
+    output_excel = "Extracted_Bajaj_Excel/bajaj_output.xlsx"
     combined_data = []
 
-    for Bajaj_sub_module_dir in ["Bajaj gcv and pcv insurances", "Bajaj private car insurances", "Bajaj 2 wheeler Insurances"]:
+    for Bajaj_sub_module_dir in ["Bajaj 2 wheeler Insurances",
+                                 "Bajaj gcv and pcv insurances", "Bajaj private car insurances"]:
         sub_module_path = os.path.join(base_dir, Bajaj_sub_module_dir)
         for pdf_file in os.listdir(sub_module_path):
             pdf_path = os.path.join(sub_module_path, pdf_file)
             submodule_name = detect_submodule(pdf_path)
-            if submodule_name == "Commercial":
-                details = bajaj_pcv_and_gcv_submodule(pdf_path)
+            if submodule_name == "GCV":
+                details = bajaj_gcv_submodule(pdf_path)
                 combined_data.extend(details)
             elif submodule_name == "Private Car":
                 details = bajaj_private_car_submodule(pdf_path)
@@ -27,6 +31,12 @@ def main():
             elif submodule_name == "Two-Wheeler":
                 details = bajaj_two_wheeler_submodule(pdf_path)
                 combined_data.extend(details)
+            elif submodule_name == "PCV":
+                details = bajaj_pcv_submodule(pdf_path)
+                combined_data.extend(details)
+            else:
+                print(f'No match for {pdf_file}')
+
             # Handle other companies as needed
 
     # Create a DataFrame from combined_data
@@ -38,23 +48,36 @@ def main():
 
 
 def detect_submodule(pdf_path):
-    pattern1 = r'\b\w*commercial\w*\b'
-    pattern2 = r'\b\w*private car\w*\b'
-    pattern3 = r'\b\w*two-wheeler\w*\b'
+    pcv_pattern = r'(Passenger Carrying)'
+    car_pattern = r'Private\s*Car|PrivateCar'
+    twoWheeler_pattern = r'\bTwo[-\s]?Wheeler\b'
+
+    gcv_pattern = r'(Goods Carrying)'
 
     # Function to detect company name from first page of PDF
     with open(pdf_path, 'rb') as f:
         reader = PdfReader(f)
-        first_page_text = reader.pages[0].extract_text().lower()
-        if re.search(pattern1,reader):
-            return "Commercial"
-        elif "Private Car" in first_page_text.lower():
-            return "Private Car"
-        elif "Two-Wheeler" in first_page_text.lower():
+        page_text = reader.pages[0].extract_text()
+        page_text += reader.pages[2].extract_text()
+
+        match = re.search(twoWheeler_pattern, page_text, re.IGNORECASE)
+        if match:
+            print(f"Match found: {match.group()}")
             return "Two-Wheeler"
-        # Add more conditions for other companies
-        else:
-            return None
+        match = re.search(pcv_pattern, page_text, re.IGNORECASE)
+        if match:
+            print(f"Match found: {match.group()}")
+            return "PCV"
+        match = re.search(gcv_pattern, page_text, re.IGNORECASE)
+        if match:
+            print(f"Match found: {match.group()}")
+            return "GCV"
+        match = re.search(car_pattern, page_text, re.IGNORECASE)
+        if match:
+            print(f"Match found: {match.group()}")
+            return "Private Car"
+        return 'None'
+
 
 if __name__ == "__main__":
     main()

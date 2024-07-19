@@ -3,16 +3,16 @@ import re
 import pandas as pd
 from PyPDF2 import PdfReader
 
-from Bajaj.Bajaj_pcv import bajaj_pcv_submodule
-from Bajaj.bajaj_gcv import bajaj_gcv_submodule
-from Bajaj.bajaj_private_car import bajaj_private_car_submodule
-from Bajaj.bajaj_two_wheeler import bajaj_two_wheeler_submodule
+from Bajaj.py_code.Bajaj_pcv import bajaj_pcv_submodule
+from Bajaj.py_code.bajaj_gcv import bajaj_gcv_submodule
+from Bajaj.py_code.bajaj_private_car import bajaj_private_car_submodule
+from Bajaj.py_code.bajaj_two_wheeler import bajaj_two_wheeler_submodule
 
 
 # 'Insurance_pdf\\Bajaj gcv and pcv insurances\\OG-19-1901-1803-00005678.pdf'
 # Bajaj/Insurance_pdf/Bajaj gcv and pcv insurances/OG-19-1901-1803-00005678.pdf
 def main():
-    base_dir = "Insurance_pdf"
+    base_dir = "../Insurance_pdf"
     output_excel = "Extracted_Bajaj_Excel/bajaj_output.xlsx"
     combined_data = []
 

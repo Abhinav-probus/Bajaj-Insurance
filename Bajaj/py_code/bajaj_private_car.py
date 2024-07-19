@@ -2,9 +2,7 @@ import PyPDF2
 import extract_vehicle_details
 from extract_vehicle_details import vehicle_details
 from datetime import datetime
-import os
 import re
-import pandas as pd
 
 
 def convert_to_float(value_str):
@@ -32,7 +30,7 @@ def extract_text_from_pdf(pdf_path):
 
 
 def bajaj_private_car_submodule(pdf_path):
-    print('inside car')
+
 
     # Loop through all PDF files in the directory
     all_info = []

@@ -1,6 +1,6 @@
 import PyPDF2
-import extract_vehicle_details
-from extract_vehicle_details import vehicle_details
+# import extract_vehicle_details
+# from extract_vehicle_details import vehicle_details
 from datetime import datetime
 import os
 import re
@@ -29,7 +29,7 @@ def extract_text_from_pdf(pdf_path):
             page = pdf_reader.pages[page_num]
             text += page.extract_text()
     return text
-def bajaj_two_wheeler_submodule(pdf_path):
+def icici_two_wheeler_submodule(pdf_path):
     # List to store all extracted info
     all_info = []
 
@@ -40,7 +40,7 @@ def bajaj_two_wheeler_submodule(pdf_path):
 
 def convert_date_format(date_str):
     # Define the input formats
-    input_formats = ['%d-%b-%Y', '%b%Y', '%b/%Y', '%d-%m-%y','%d-%B-&Y','%B/%Y','%d-%B-%y','%B%Y','%d-%b-%y']
+    input_formats = ['%d-%b-%Y', '%b%Y', '%b/%Y', '%d-%m-%y','%d-%B-&Y','%B/%Y','%d-%B-%y','%B%Y','%d-%b-%y','%b %d %Y']
     # Define the output format
     output_format = '%Y/%m/%d'
 
@@ -57,14 +57,13 @@ def convert_date_format(date_str):
             continue
 
     # If all formats fail, return an error message or handle the error
-
     return 'Invalid date format'
 
 
 # Function to extract information using regex
 def extract_info(text,pdf_path):
     extracted_info = {}
-    extract_vehicle_details.extract_veh_details(pdf_path)
+    # extract_vehicle_details.extract_veh_details(pdf_path)
     def extract_field(pattern, text,default = ' '):
         match = re.search(pattern, text)
         if match:
@@ -76,22 +75,26 @@ def extract_info(text,pdf_path):
             return default
 
     extracted_info['Sub module'] = 'Two wheeler'
-    extracted_info['Policy Number'] = extract_field(r"policy number\s+'([A-Z0-9-]+)'", text)
-    extracted_info["Insured Name"] = extract_field(r'Dear ([A-Za-z\s]+)[,\n]', text)
-    extracted_info["Customer's Phone Number"] = extract_field(r'Proposer Mobile Number[:\s]+(\d+)', text)
-    extracted_info["Customer's Email"] = extract_field(r'Proposer e-mail id[:\s]+([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})', text)
-    extracted_info["Insured Address"] = extract_field(r'Proposer Address\s*:\s*([^:]+?)\s*\d\.\s', text)
-    extracted_info['Date of Issuance'] = extract_field(r'Policy [iI]ssued on\s+(\d{2}-[A-Za-z]{3}-\d{4})', text)
+    extracted_info['Policy Number'] = extract_field(r'Policy No\. ([A-Za-z0-9/\\-]+)', text)
+    extracted_info["Insured Name"] = extract_field(r'Dear\s+([A-Z\s]+),', text)
+    extracted_info['Insured Name']=extracted_info['Insured Name'].title()
+    extracted_info["Customer's Phone Number"] = extract_field(r'Mobile No:[\s]+([*\d]{10})', text)
+    extracted_info["Customer's Email"] = extract_field(r'Email Address[:\s]+([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})', text)
+    extracted_info["Insured Address"] = extract_field(r'Address\s*:\s*([\s\S]*?)\s*Period of Insurance', text)
+    extracted_info['Date of Issuance'] = extract_field(r'Policy Issued On[\s:]*([A-Za-z]{3} \d{1,2}, \d{4})', text)
+    extracted_info['Date of Issuance'] = extracted_info['Date of Issuance'].replace(',','')
     try:
         extracted_info['Date of Issuance'] = convert_date_format(extracted_info['Date of Issuance'])
     except:
         print(f'Date of issuance incorrect format - {extracted_info['Date of Issuance']} in {pdf_path} - value : {extracted_info['Date of Issuance']}')
-    extracted_info['Period of Insurance (From)'] = extract_field(r'From[\s:]+(\d{2}-[A-Za-z]{3,4}-\d{4})', text,' ')
+    extracted_info['Period of Insurance (From)'] = extract_field(r'Period of Insurance\s*:\s*(\w{3} \d{2}, \d{4})', text,' ')
+    extracted_info['Period of Insurance (From)'] = extracted_info['Period of Insurance (From)'].replace(',','')
     try:
         extracted_info['Period of Insurance (From)'] = convert_date_format(extracted_info['Period of Insurance (From)'])
     except:
         print(f'Period of Insurance (From) date incorrect format - {extracted_info['Period of Insurance (From)']} in {pdf_path} - value : {extracted_info['Period of Insurance (From)']}')
-    extracted_info['Period of Insurance (To)'] = extract_field(r'To[\s:][\s:]+(\d{2}-[A-Za-z]{3,4}-\d{4})', text,' ')
+    extracted_info['Period of Insurance (To)'] = extract_field(r'Midnight of (\w{3} \d{2}, \d{4})', text,' ')
+    extracted_info['Period of Insurance (To)'] = extracted_info['Period of Insurance (To)'].replace(',','')
     try:
         extracted_info['Period of Insurance (To)'] = convert_date_format(extracted_info['Period of Insurance (To)'])
     except:
@@ -154,18 +157,6 @@ def extract_info(text,pdf_path):
     # extracted_info['Final Premium'] = extract_field(r'Final Premium Rs.[\s]+(\d{1,3}(?:,\d{3})*\.\d{2})',text)
     extracted_info['Final Premium'] = extracted_info['Net Premium(A+B)'] + extracted_info['GST']
     return extracted_info
-def export_to_xlsx(folder_path, output_excel_path):
-    all_details = []
-    for filename in os.listdir(folder_path):
-        if filename.endswith('.pdf'):
-            pdf_path = os.path.join(folder_path, filename)
-            pdf_text = extract_text_from_pdf(pdf_path)
-            extract_vehicle_details.extract_veh_details(pdf_path)
-            details = extract_info(pdf_text)
-            all_details.append(details)
-
-    df = pd.DataFrame(all_details)
-    df.to_excel(output_excel_path, index=False)
 
 # pdf_path = 'Bajaj Insurances/OG-25-1901-1806-00024047.pdf'
 
@@ -179,8 +170,8 @@ def export_to_xlsx(folder_path, output_excel_path):
 
 
 # Directory containing the PDFs
-# pdf_dir = 'Insurance_pdf/Bajaj 2 wheeler Insurances'
-#
+pdf_path = r'C:\Users\Abhinav nair\PycharmProjects\Insurance pdf reader\ICICI\ICICI insurance pdfs\ICICI 2 wheeler insurances\3005A35225130900B00.pdf'
+icici_two_wheeler_submodule(pdf_path)
 # output_excel = 'Extracted_Bajaj_Excel/extracted_bajaj_2wheeler_info.xlsx'
 #
 # # Call the function to convert PDF information to Excel

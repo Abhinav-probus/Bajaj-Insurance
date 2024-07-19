@@ -50,7 +50,7 @@ def main():
 def detect_submodule(pdf_path):
     pcv_pattern = r'(Passenger Carrying)'
     car_pattern = r'Private\s*Car|PrivateCar'
-    twoWheeler_pattern = r'\bTwo[-\s]?Wheeler\b'
+    twoWheeler_pattern = r'(Two[-\s]?Wheeler)'
 
     gcv_pattern = r'(Goods Carrying)'
 

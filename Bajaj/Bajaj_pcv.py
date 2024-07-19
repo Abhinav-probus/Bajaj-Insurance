@@ -29,12 +29,12 @@ def extract_text_from_pdf(pdf_path):
             text += page.extract_text()
     return text
 def bajaj_pcv_submodule(pdf_path):
-    print('inside pcv')
+
     # List to store all extracted info
     all_info = []
+    extract_text_from_pdf
 
-
-    pdf_text = extract_text_from_pdf(pdf_path)
+    pdf_text = (pdf_path)
     vehicle_info = extract_info(pdf_text, pdf_path)
     all_info.append(vehicle_info)
     # print(f"Data ")

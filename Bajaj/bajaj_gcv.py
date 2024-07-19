@@ -30,7 +30,7 @@ def extract_text_from_pdf(pdf_path):
     return text
 def bajaj_gcv_submodule(pdf_path):
     # List to store all extracted info
-    print('inside gcv')
+
     all_info = []
 
 

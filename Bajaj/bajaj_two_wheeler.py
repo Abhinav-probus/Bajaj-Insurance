@@ -21,7 +21,7 @@ def convert_to_float(value_str):
         return 0.0  # Return 0 if conversion fails or other errors occur
 
 def extract_text_from_pdf(pdf_path):
-    print('inside 2wh')
+
     with open(pdf_path, 'rb') as file:
         pdf_reader = PyPDF2.PdfReader(file)
         text = ""

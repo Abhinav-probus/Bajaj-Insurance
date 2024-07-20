@@ -13,7 +13,7 @@ from Bajaj.py_code.bajaj_two_wheeler import bajaj_two_wheeler_submodule
 # Bajaj/Insurance_pdf/Bajaj gcv and pcv insurances/OG-19-1901-1803-00005678.pdf
 def main():
     base_dir = "../Insurance_pdf"
-    output_excel = "Extracted_Bajaj_Excel/bajaj_output.xlsx"
+    output_excel = r"C:\Users\Abhinav nair\PycharmProjects\Insurance pdf reader\Bajaj\Extracted_Bajaj_Excel\Bajaj_output.xlsx"
     combined_data = []
 
     for Bajaj_sub_module_dir in ["Bajaj 2 wheeler Insurances",

@@ -1,10 +1,13 @@
 import PyPDF2
-# import extract_vehicle_details
-# from extract_vehicle_details import vehicle_details
+
 from datetime import datetime
 import os
 import re
 import pandas as pd
+
+from ICICI.py_code import extract_vehicle_details
+from ICICI.py_code.extract_tabular_details import table_details, extract_table_details
+from ICICI.py_code.extract_vehicle_details import vehicle_details, cleaned_vehicle_details
 
 
 def convert_to_float(value_str):
@@ -28,15 +31,19 @@ def extract_text_from_pdf(pdf_path):
         for page_num in range(len(pdf_reader.pages)):
             page = pdf_reader.pages[page_num]
             text += page.extract_text()
+    extract_table_details(text)
     return text
 def icici_two_wheeler_submodule(pdf_path):
     # List to store all extracted info
+
     all_info = []
 
     pdf_text = extract_text_from_pdf(pdf_path)
+    extract_table_details(pdf_text)
     vehicle_info = extract_info(pdf_text, pdf_path)
     all_info.append(vehicle_info)
     return all_info
+
 
 def convert_date_format(date_str):
     # Define the input formats
@@ -63,7 +70,7 @@ def convert_date_format(date_str):
 # Function to extract information using regex
 def extract_info(text,pdf_path):
     extracted_info = {}
-    # extract_vehicle_details.extract_veh_details(pdf_path)
+    extract_vehicle_details.extract_tabledata_from_pdf(pdf_path)
     def extract_field(pattern, text,default = ' '):
         match = re.search(pattern, text)
         if match:
@@ -87,7 +94,8 @@ def extract_info(text,pdf_path):
         extracted_info['Date of Issuance'] = convert_date_format(extracted_info['Date of Issuance'])
     except:
         print(f'Date of issuance incorrect format - {extracted_info['Date of Issuance']} in {pdf_path} - value : {extracted_info['Date of Issuance']}')
-    extracted_info['Period of Insurance (From)'] = extract_field(r'Period of Insurance\s*:\s*(\w{3} \d{2}, \d{4})', text,' ')
+    # extracted_info['Period of Insurance (From)'] = extract_field(r'Period of Insurance\s*:\s*(\w{3} \d{2}, \d{4})', text,' ')
+    extracted_info['Period of Insurance (From)'] = table_details["policy_start"]
     extracted_info['Period of Insurance (From)'] = extracted_info['Period of Insurance (From)'].replace(',','')
     try:
         extracted_info['Period of Insurance (From)'] = convert_date_format(extracted_info['Period of Insurance (From)'])
@@ -99,7 +107,8 @@ def extract_info(text,pdf_path):
         extracted_info['Period of Insurance (To)'] = convert_date_format(extracted_info['Period of Insurance (To)'])
     except:
         print(f'Period of Insurance (To) date incorrect format - {extracted_info['Period of Insurance (To)']} in {pdf_path} - value : {extracted_info['Period of Insurance (To)']}')
-    extracted_info['Registration Number'] = extract_field(r'([A-Z]{2}\d{2}[A-Z]{1,3}\d{4})', text)
+    # extracted_info['Registration Number'] = cleaned_vehicle_details['Vehicle Registration No']
+    extracted_info['Registration Number'] = extract_field(r'Vehicle\s+Registration\s+No\.\s+(.*)',text,'')
     extracted_info['RTO'] = extracted_info['Registration Number'][:4]
     try:
         extracted_info['NCB (%)'] = vehicle_details['NCB%']
@@ -108,17 +117,19 @@ def extract_info(text,pdf_path):
         print(f'NCB% not found in {pdf_path}')
 
     # Assuming vehicle_details is a dictionary available in the scope with the required fields
-    extracted_info['Date of Registration'] = vehicle_details['Month/YearofRegn']
+    reg_number = extracted_info['Registration Number']
+
+    extracted_info['Date of Registration'] = extract_field(rf'{re.escape(reg_number)}\s*\n([A-Za-z]+\s\d{{1,2}},\s\d{{4}})',text,'')
     try:
         extracted_info['Date of Registration'] = convert_date_format(extracted_info['Date of Registration'])
     except:
         print(f'Date of registration incorrect format - {extracted_info['Date of Registration']} in {pdf_path} - value : {extracted_info['Date of Registration']}')
-    extracted_info['Make'] = vehicle_details['VehicleMake']
-    extracted_info['Model'] = vehicle_details['VehicleModel']
+    extracted_info['Make'] = table_details["vehicle_make"]
+    extracted_info['Model'] = vehicle_details['vehicle_model']
     extracted_info['Variant'] = vehicle_details['VehicleSubType']
     extracted_info['Year of Manufacture'] = vehicle_details['YearofManufacture']
     extracted_info['Fuel Type'] = vehicle_details['FuelType']
-    extracted_info['Engine Number'] = vehicle_details['EngineNumber']
+    extracted_info['Engine Number'] = extract_engine_number(text)
     extracted_info['Chassis Number'] = vehicle_details['ChassisNumber']
     extracted_info['Seating Capacity'] = vehicle_details['SeatingCapacity']
     extracted_info['CC'] = vehicle_details['CubicCapacity/Kilowatt']

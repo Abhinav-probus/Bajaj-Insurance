@@ -40,7 +40,7 @@ def bajaj_two_wheeler_submodule(pdf_path):
 
 def convert_date_format(date_str):
     # Define the input formats
-    input_formats = ['%d-%b-%Y', '%b%Y', '%b/%Y', '%d-%m-%y','%d-%B-&Y','%B/%Y','%d-%B-%y','%B%Y','%d-%b-%y']
+    input_formats = ['%d-%b-%Y','%b %d, %Y', '%b%Y', '%b/%Y', '%d-%m-%y','%d-%B-&Y','%B/%Y','%d-%B-%y','%B%Y','%d-%b-%y']
     # Define the output format
     output_format = '%Y/%m/%d'
 

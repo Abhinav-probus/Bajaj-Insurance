@@ -5,8 +5,7 @@ def extract_tabledata_from_pdf(pdf_path):
     with pdfplumber.open(pdf_path) as pdf:
         all_tables = []
         # Iterate over pages starting from the second page
-        for page_number in range(1, len(pdf.pages)):
-            page = pdf.pages[page_number]
+        for page in pdf.pages:
             tables = page.extract_tables()
             for table in tables:
                 all_tables.extend(table)

@@ -121,8 +121,8 @@ def extract_info(text,pdf_path):
     try:
         extracted_info['NCB (%)'] = vehicle_details['NCB']
     except KeyError:
-        extracted_info['NCB (%)'] = '0'
-        print(f'NCB% not found in {pdf_path}')
+        extracted_info['NCB (%)'] = extract_field(r'(\d+)%\nPrevious Policy Details',text,'0')
+
 
 
 
@@ -166,7 +166,7 @@ def extract_info(text,pdf_path):
     previous_policy_subtext = text[previous_policy_subtext_pos:]
     #previous policy left to do
     extracted_info['Previous Policy Expiry Date'] = extract_field(r'\d{2}-\d{2}-\d{4} to (\d{2}-\d{2}-\d{4})|(\w{3} \d{2}, \d{4})',previous_policy_subtext,' ')
-    extracted_info['Previous Insurer Name'] = extract_field(r'(?:.*\n){2}(\w+)\\nThe commencement of',previous_policy_subtext,' ')
+    extracted_info['Previous Insurer Name'] = extract_field(r'(.*)\n.*\n.*\nThe commencement of coverage',previous_policy_subtext,' ')
     # 'Previous Policy No': '2333444444', 'Previous Policy Expiry Date': 'Jul 07, 2023', 'Previous Insurer Name': '1'}
 
     try:
